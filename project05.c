@@ -79,8 +79,11 @@ int main(int argc, char **argv) {
 											
 					if (ch == '\n') {
 						arr[index] = '\0';
-						printf("%s", arr);
 						index = 0;
+						int r = chat_write(arr, &users);
+						if (r == -1){
+							printf("Message incorrectly formatted\n");
+						}
 					}
 							
 				} else if (pfds[j].fd == presence_fd){
