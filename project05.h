@@ -19,7 +19,7 @@ struct user_t {
 	char name[64];
 	char port[64];
 	char status[64];
-	char host[64];
+	char host[NI_MAXHOST];
 };
 
 struct users {
@@ -28,10 +28,7 @@ struct users {
 };
 
 
-void fatalp(char* string) {
-	perror(string);
-	exit(EXIT_FAILURE);
-}
+void fatalp(char* string);
 
 //udp.c
 int init_presence();
@@ -40,6 +37,7 @@ void write_presence(int fd, char* status, char* name, char* port);
 void users_update(struct user_t user, struct users *users);
 
 
+
 //tcp.c
 int init_tcp();
-int chat_read (int chat_fd);
+int chat_read (int chat_fd, struct users *users);

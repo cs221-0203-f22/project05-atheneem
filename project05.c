@@ -6,6 +6,11 @@ void init_fd (struct pollfd *pfd, int i,  int fd) {
 	pfd[i].revents = 0;
 }
 
+void fatalp(char* string) {
+	perror(string);
+	exit(EXIT_FAILURE);
+}
+
 
 int main(int argc, char **argv) {
 //initialize users struct
@@ -20,17 +25,6 @@ int main(int argc, char **argv) {
 	int i = 0;
 	int r;
 
-	init_fd(pfds, num_pfds, STDIN_FILENO); 
-	num_pfds ++;
-
-	int presence_fd = init_presence();
-	init_fd(pfds, num_pfds, presence_fd); 
-	num_pfds ++;
-
-	int listener_fd = init_tcp();					//new: init listener
-	init_fd(pfds, num_pfds, listener_fd);
-	num_pfds++;
-
 //check if user included port num and name
 	if(argc < 3) {
 		printf("Usage: %s port\n", argv[0]);
@@ -40,6 +34,18 @@ int main(int argc, char **argv) {
 
 	char *username = argv[1];						
 	char *port = argv[2];
+
+	init_fd(pfds, num_pfds, STDIN_FILENO); 
+	num_pfds ++;
+
+	int presence_fd = init_presence();
+	init_fd(pfds, num_pfds, presence_fd); 
+	num_pfds ++;
+
+	int listener_fd = init_tcp(port);					//new: init listener
+	init_fd(pfds, num_pfds, listener_fd);
+	num_pfds++;
+
 
 	char arr[50];
 	int index = 0;
@@ -84,11 +90,12 @@ int main(int argc, char **argv) {
 				} 
 				else if (pfds[j].fd == listener_fd) { 
 					int chat_fd = accept(listener_fd, NULL, NULL);			//new code
+					//check errors
 					init_fd(pfds, num_pfds, chat_fd);						//would doing it this way skip over the new fd?
 					num_pfds ++;
 				}
 				else {									//char_fd readable
-					int chat = chat_read(pfds[j].fd);
+					int chat = chat_read(pfds[j].fd, &users);
 					if(chat == -1){
 						pfds[j].fd = -1;		//if their connection is closed, set the fd to -1
 					}

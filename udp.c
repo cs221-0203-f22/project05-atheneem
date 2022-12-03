@@ -1,4 +1,4 @@
-#include "project05.c"
+#include "project05.h"
 
 int init_presence() {
 
@@ -12,7 +12,7 @@ int init_presence() {
     struct addrinfo *results;       // array, allocated in gai()
     int e = getaddrinfo(NULL, "8221", &hints, &results);			
     if (e != 0) {
-        printf("getaddrinfo: %s\n", gai_strerror(e));
+        printf("getaddrinfo udp: %s\n", gai_strerror(e));
         exit(-1);
     }
     
@@ -73,7 +73,9 @@ int init_presence() {
  		fatalp("read");
  	}
 
- 	if (getnameinfo((struct sockaddr *) &store, &store_len, u->host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV) != 0){		//added (not working)
+	char service[64];
+	
+ 	if (getnameinfo((struct sockaddr *) &store, store_len, u->host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV) != 0){		//added (not working) removed &from store len
  		fatalp("getnameinfo");
  	}
  
