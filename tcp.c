@@ -83,7 +83,7 @@ int chat_read (int chat_fd, struct users *users) {		//returns 0 if sucessful, -1
 	struct sockaddr_storage peer;
 	socklen_t peer_len = sizeof(peer);
 	
-	int r = recv (chat_fd, buff, sizeof(buff), 0);	//recheck these inputs
+	int r = recv (chat_fd, buff, sizeof(buff), 0);	
 	if (r == -1) {
 		fatalp("recv");
 	} else if (r == 0) {				//put -1 in that poll fd socket
@@ -127,26 +127,32 @@ int chat_read (int chat_fd, struct users *users) {		//returns 0 if sucessful, -1
 int chat_write (char* message, struct users *users) {
 	char name[25];
 	char msg[MAXCHATLEN];
-	int msg_len = strlen(msg) + 1;
 	
 	if (message[0] != '@') {	//incorrect format
 		return -1;
 	}
 	
 	int i = 1;
+	int name_index = 0;
+	
 	while (message[i] != ':') {
 		char let = message[i];
 		
 		if (let == '\0') {		//incorrect format
 			return -1;
 		}
-		name[i-1] = let;
+		name[name_index] = let;
+		name_index++;
 		i++;
 	}
-	name[i] = '\0'; 	//null terminate;
+	name[name_index] = '\0'; 	//null terminate;
 	
 	int j = 0;
 	i++;
+	
+	if (message[i] == ' '){		//skip over space
+		i++;
+	}
 	
 	while (message[i] != '\0') {
 		char let = message[i];
@@ -157,6 +163,7 @@ int chat_write (char* message, struct users *users) {
 	}
 	msg[j] = '\0';		//null terminate
 
+	int msg_len = strlen(msg) + 1;
 
  	for (int i = 0; i < users->count; i++) {	//for every user in arr...
 		struct user_t curr_index = users->users_list[i];
@@ -164,8 +171,6 @@ int chat_write (char* message, struct users *users) {
 		
 		if ((strcmp(name, curr_name)) == 0) {	//if names match
 			int client_fd = init_client(&curr_index);
-
-			printf("message: %s\n", msg);
 
 			int s = send(client_fd, msg, msg_len, 0);
 			if (s == -1){
