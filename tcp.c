@@ -59,7 +59,7 @@ int init_client(struct user_t *u) {
     struct addrinfo *results;       // array, allocated in gai()
 	
 	int fd = socket(PF_INET, SOCK_STREAM, 0);
-	if (fd == -1){
+	if (fd == -1) {
 		fatalp("socket");
 	}
 	
@@ -69,7 +69,7 @@ int init_client(struct user_t *u) {
        exit(-1);
    }
 
-   if(connect(fd, results->ai_addr, results->ai_addrlen) == -1){
+   if (connect(fd, results->ai_addr, results->ai_addrlen) == -1) {
    		fatalp("connect");
    }
 
@@ -150,7 +150,7 @@ int chat_write (char* message, struct users *users) {
 	int j = 0;
 	i++;
 	
-	if (message[i] == ' '){		//skip over space
+	if (message[i] == ' ') {		//skip over space
 		i++;
 	}
 	
@@ -165,12 +165,15 @@ int chat_write (char* message, struct users *users) {
 
 	int msg_len = strlen(msg) + 1;
 
+	bool inArr = false;				//check if recipient online
+
  	for (int i = 0; i < users->count; i++) {	//for every user in arr...
 		struct user_t curr_index = users->users_list[i];
 		char *curr_name = curr_index.name;
 		
 		if ((strcmp(name, curr_name)) == 0) {	//if names match
 			int client_fd = init_client(&curr_index);
+			inArr = true;
 
 			int s = send(client_fd, msg, msg_len, 0);
 			if (s == -1){
@@ -179,6 +182,10 @@ int chat_write (char* message, struct users *users) {
 							
 			break;
 		}
+	}
+
+	if(!inArr) {
+		printf("User not found\n");
 	}
 
 

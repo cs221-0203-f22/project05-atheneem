@@ -17,7 +17,7 @@ int init_presence() {
     }
     
     int fd = socket(results->ai_family, results->ai_socktype, results->ai_protocol);
-    if(fd == -1){
+    if (fd == -1) {
     	fatalp("socket");
     }
     
@@ -42,15 +42,15 @@ int init_presence() {
  }
 
 
- void write_presence(int fd, char* status, char* name, char* port) {
+ void write_presence (int fd, char* status, char* name, char* port) {
  	char buff[64];
  	int n = snprintf(buff, 64, "%s %s %s", name, status, port);
- 	if(n == 0){
+ 	if (n == 0) {
  		fatalp("snprintf");
  	}
  	struct sockaddr_in addr;
  	int i = inet_pton(AF_INET, "10.10.13.255", &addr.sin_addr);
- 	if(i != 1){
+ 	if (i != 1) {
  		fatalp("inet_pton");
  	}
  	addr.sin_port = htons(8221);
@@ -58,13 +58,13 @@ int init_presence() {
  	socklen_t len = sizeof(addr);
  	int bufsize = strlen(buff) + 1;
  	int s = sendto(fd, buff, bufsize, 0, (struct sockaddr *)&addr, len);
- 	if(s == -1){
+ 	if (s == -1) {
  		fatalp("sendto");
  	}
  }
 
 
- void read_presence(int fd, struct user_t *u) {
+ void read_presence (int fd, struct user_t *u) {
   	struct sockaddr_storage store;
   	char buff[64];
   	socklen_t store_len = sizeof(store);
@@ -75,7 +75,7 @@ int init_presence() {
 
 	char service[64];
 	
- 	if (getnameinfo((struct sockaddr *) &store, store_len, u->host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV) != 0){		//added (not working) removed &from store len
+ 	if (getnameinfo((struct sockaddr *) &store, store_len, u->host, NI_MAXHOST, service, NI_MAXSERV, NI_NUMERICSERV) != 0) {
  		fatalp("getnameinfo");
  	}
  
@@ -84,32 +84,35 @@ int init_presence() {
   }
 
 
- void users_update(struct user_t user, struct users *users){
+ void users_update (struct user_t user, struct users *users) {
  	bool print = false;
  	bool in_arr = false;
+ 	int index;
  
  	char *name = user.name;
  	char *status = user.status;
  	
- 	for(int i = 0; i < users->count; i++){	//for every user in arr...
+ 	for (int i = 0; i < users->count; i++) {	//for every user in arr...
  		struct user_t curr_index = users->users_list[i];
  		char *curr_name = curr_index.name;
  		char *curr_status = curr_index.status;
  		
- 		if((strcmp(name, curr_name)) == 0){	//if in list
+ 		if ((strcmp(name, curr_name)) == 0) {	//if in list
  			in_arr = true;
- 			if(strcmp(status, curr_status) != 0){	//if status different, print
+ 			if (strcmp(status, curr_status) != 0) {	//if status different, print
+ 				index = i;
  				print = true;
  			}
  		}
  	}
- 	if(!in_arr){		//if user not in arr, add 
+ 	if (!in_arr) {		//if user not in arr, add 
  		users->users_list[users->count] = user;
  		printf("%s is %s on %s\n", name, status, user.port);
- 		users->count ++;
+ 		users->count++;
  	}
  
- 	if(print){
+ 	if (print) {		//reassign
+ 		users->users_list[index] = user;
  		printf("%s is %s on %s\n", name, status, user.port);
  	}
  }

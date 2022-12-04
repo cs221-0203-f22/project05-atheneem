@@ -6,13 +6,13 @@ void init_fd (struct pollfd *pfd, int i,  int fd) {
 	pfd[i].revents = 0;
 }
 
-void fatalp(char* string) {
+void fatalp (char* string) {
 	perror(string);
 	exit(EXIT_FAILURE);
 }
 
 
-int main(int argc, char **argv) {
+int main (int argc, char **argv) {
 //initialize users struct
 	struct users users;
 	users.count = 0;
@@ -26,7 +26,7 @@ int main(int argc, char **argv) {
 	int r;
 
 //check if user included port num and name
-	if(argc < 3) {
+	if (argc != 3) {
 		printf("Usage: %s port\n", argv[0]);
 		exit(EXIT_FAILURE);
 		
@@ -42,7 +42,7 @@ int main(int argc, char **argv) {
 	init_fd(pfds, num_pfds, presence_fd); 
 	num_pfds ++;
 
-	int listener_fd = init_tcp(port);					//new: init listener
+	int listener_fd = init_tcp(port);				
 	init_fd(pfds, num_pfds, listener_fd);
 	num_pfds++;
 
@@ -51,14 +51,15 @@ int main(int argc, char **argv) {
 	int index = 0;
 
 	int poll_trips = 0;
+
     
-	while(!eof){
+	while (!eof) {
 		
 		num_readable = poll(pfds, num_pfds, TIMEOUT);
 		
 		if (num_readable > 0){
 			//if the POLLIN bitflag is set in revents
-			for(int j = 0; j < num_pfds; j++) {		//loop through readable fds
+			for (int j = 0; j < num_pfds; j++) {		//loop through readable fds
 
 				if (! (pfds[j].revents & POLLIN)){
 					continue;
@@ -69,7 +70,7 @@ int main(int argc, char **argv) {
 					char ch;			
 					r = read(STDIN_FILENO, &ch, 1);
 						
-					if(r == 0) {
+					if (r == 0) {
 						eof = true;
 						break;
 					}
@@ -81,23 +82,25 @@ int main(int argc, char **argv) {
 						arr[index] = '\0';
 						index = 0;
 						int r = chat_write(arr, &users);
-						if (r == -1){
+						if (r == -1) { 
 							printf("Message incorrectly formatted\n");
 						}
 					}
 							
-				} else if (pfds[j].fd == presence_fd){
+				} else if (pfds[j].fd == presence_fd) {
 					struct user_t user;
 					read_presence(presence_fd, &user);
 				    users_update(user, &users);
 				} 
 				else if (pfds[j].fd == listener_fd) { 
-					int chat_fd = accept(listener_fd, NULL, NULL);			//new code
-					//check errors
-					init_fd(pfds, num_pfds, chat_fd);						//would doing it this way skip over the new fd?
+					int chat_fd = accept(listener_fd, NULL, NULL);			
+					if (chat_fd == -1) {
+						fatalp("accept");
+					}
+					init_fd(pfds, num_pfds, chat_fd);						
 					num_pfds ++;
 				}
-				else {									//char_fd readable
+				else {									//chat_fd readable
 					int chat = chat_read(pfds[j].fd, &users);
 					if(chat == -1){
 						pfds[j].fd = -1;		//if their connection is closed, set the fd to -1
@@ -106,14 +109,14 @@ int main(int argc, char **argv) {
 			} 
 
 				
-		} else if (num_readable == 0){
+		} else if (num_readable == 0) {
 			poll_trips ++;
-			if (poll_trips == 20){
+			if (poll_trips == 20) {
 				write_presence(presence_fd, "online", username, port);
 				poll_trips = 0;
 			}
 			
-		} else if (num_readable == -1){
+		} else if (num_readable == -1) {
 			perror("poll failed");
 			exit(-1);
 		}
